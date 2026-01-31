@@ -1,8 +1,29 @@
-# Default ignored files
+# --- Your JetBrains/IDE Stuff ---
 /shelf/
 /workspace.xml
-# Editor-based HTTP Client requests
 /httpRequests/
-# Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+.idea/
+
+# --- Python Essentials (CRITICAL) ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+.env
+
+# --- OS Junk ---
+.DS_Store
+Thumbs.db
+
+# --- Hackathon Specifics ---
+# If your reference audio files are huge, uncomment the next line to ignore them.
+# But for 5 files, keep them in so your teammate gets them.
+# *.wav
+# references/*.npz
