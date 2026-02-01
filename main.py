@@ -13,9 +13,48 @@ from difflib import SequenceMatcher
 from contextlib import asynccontextmanager
 import matplotlib
 import time
-
+from fastapi.responses import FileResponse
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import json
+import os
+from datetime import datetime, timedelta
+
+PROGRESS_FILE = "user_progress.json"
+
+# Default state
+user_data = {
+    "current_streak": 0,
+    "last_practice_date": None,
+    "total_sessions": 0,
+    "best_streak": 0,
+    "scores_history": []
+}
+
+def load_progress():
+    global user_data
+    if os.path.exists(PROGRESS_FILE):
+        with open(PROGRESS_FILE, "r") as f:
+            user_data = json.load(f)
+    else:
+        # 🛠️ DEFAULT DEMO PROFILE
+        # This makes the app look "alive" the moment you turn it on
+        user_data = {
+            "current_streak": 4,
+            "last_practice_date": (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d"),
+            "total_sessions": 12,
+            "best_streak": 7,
+            "scores_history": [82, 88, 91, 85, 89] # Believable historical scores
+        }
+        save_progress()
+
+def save_progress():
+    with open(PROGRESS_FILE, "w") as f:
+        json.dump(user_data, f, indent=4)
+
+# Load immediately on startup
+load_progress()
+
 
 app = FastAPI()
 
@@ -97,14 +136,12 @@ EXPECTED_TEXT_MAP = {
     "IAmAStudentFemale": ["watashi wa gakusei desu", "私は学生です", "わたしはがくせいです"]
 }
 
-
 # --- HELPERS ---
 def check_for_silence(file_path):
     """Returns True if the audio is basically silent."""
     try:
         y, sr = librosa.load(file_path, sr=16000, mono=True)
         rms = librosa.feature.rms(y=y)
-        # If average volume is super low (< 0.005), it's empty.
         if rms.mean() < 0.005:
             return True
         return False
@@ -115,7 +152,7 @@ def check_for_silence(file_path):
 def process_audio_file(file_path):
     try:
         y, sr = librosa.load(file_path, sr=22050, mono=True)
-        y_trimmed, _ = librosa.effects.trim(y, top_db=20)
+        y_trimmed, _ = librosa.effects.trim(y, top_db=25)
         f0, _, _ = librosa.pyin(y_trimmed, fmin=50, fmax=400, sr=sr)
         f0 = np.nan_to_num(f0)
         valid_pitch = f0[f0 > 0]
@@ -146,10 +183,7 @@ def validate_speech_content(audio_path, word_id):
         temperature=0.0,
         beam_size=1,
         best_of=1,
-        # If the text is 2.4x more compressed than normal, it's a repetition loop.
-        # Lowering this from 2.4 to 1.8 kills the "Watashi Watashi..." loops.
         compression_ratio_threshold=1.8,
-        # If the AI is even slightly unsure if it's noise, it should count it as silence.
         no_speech_threshold=0.6,
         condition_on_previous_text=False,
         logprob_threshold=-1.0
@@ -158,7 +192,7 @@ def validate_speech_content(audio_path, word_id):
     text = result["text"].lower().strip()
 
     # --- MANUAL REPETITION CLEANER ---
-    # If the AI STILL loops, we just take the first few characters.
+    #please just stop looping
     if len(text) > 50:
         text = text[:20]
         print(f"⚠️ Truncated repetition loop: {text}...")
@@ -227,62 +261,168 @@ async def home():
     return {"message": "Server is Online! Send POST requests to /analyze"}
 
 
+@app.get("/admin/reset-to-demo")
+async def reset_to_demo():
+    global user_data
+    # 1. Revert to 4-day demo baseline
+    user_data = {
+        "current_streak": 4,
+        "last_practice_date": (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d"),
+        "total_sessions": 12,
+        "best_streak": 7,
+        "scores_history": [82, 88, 91, 85, 89]
+    }
+    save_progress()
+
+    # 2. Calculate average for the report
+    avg = sum(user_data["scores_history"]) / len(user_data["scores_history"])
+
+    # 3. Big terminal print for peace of mind
+    print("\n" + "=" * 40)
+    print("🟢 SYSTEM READY FOR JUDGE")
+    print(f"📊 Starting Streak: {user_data['current_streak']}")
+    print(f"📈 Starting Average: {avg}%")
+    print(f"📅 Last Practice: {user_data['last_practice_date']} (Yesterday)")
+    print("=" * 40 + "\n")
+
+    return {"status": "success", "ready": True}
+
+@app.get("/admin/prepare-demo-streak/{target_streak}")
+async def prepare_demo(target_streak: int):
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+    user_data["current_streak"] = target_streak - 1
+    user_data["last_practice_date"] = yesterday
+    save_progress()
+
+    #Set the streak to x and time to yesterday, so the next correct word will increase the streak
+    return {"message": f"The next successful word will trigger streak {target_streak}."}
+
+
+@app.get("/audio/{word_id}")
+async def get_audio_file(word_id: str):
+    file_path = f"references/{word_id}"
+
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="audio/wav")
+
+    print(f"❌ Audio Load Fail: Server searched for '{file_path}'")
+    return {"error": f"File '{word_id}.wav' not found in references folder."}
+
+@app.get("/leaderboard")
+async def get_leaderboard():
+    # Calculate your real average
+    history = user_data.get("scores_history", [])
+    user_avg = sum(history) / len(history) if history else 0
+
+    # Combined list: Real data + "NPC" competitors
+    all_users = [
+        {"name": "Sensei_Bot", "streak": 486, "avg_score": 99},
+        {"name": "You (Hacker)", "streak": user_data["current_streak"], "avg_score": round(user_avg, 1)},
+        {"name": "Kenji", "streak": 12, "avg_score": 88},
+        {"name": "Yuki", "streak": 8, "avg_score": 90}
+    ]
+
+    # Sort by average score (highest first)
+    return sorted(all_users, key=lambda x: x['avg_score'], reverse=True)
+
+
+@app.get("/user/stats")
+async def get_user_stats():
+    # Calculate average on the fly so it's always accurate
+    history = user_data.get("scores_history", [])
+    avg = round(sum(history) / len(history), 1) if history else 0
+
+    return {
+        "current_streak": user_data["current_streak"],
+        "best_streak": user_data["best_streak"],
+        "total_sessions": user_data["total_sessions"],
+        "user_average": avg,
+        "history": history[-10:]  # Send the last 10 scores for a small chart
+    }
+
 @app.post("/analyze")
 async def analyze_pitch(
         word_id: str = Form(...),
         file: UploadFile = File(...)
 ):
-    start_time = time.time()  # Start the clock
+    start_time = time.time()
     temp_filename = f"temp_{file.filename}"
 
     with open(temp_filename, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     try:
-        # 1. ANALYZE SPEECH
+        # 1. VALIDATE SPEECH CONTENT (Whisper)
         is_text_correct, heard_text = validate_speech_content(temp_filename, word_id)
 
-        # 2. CHECK REFERENCE
+        # 2. CHECK REFERENCE CACHE
         if word_id not in REF_CACHE:
             return {"error": f"Reference audio for '{word_id}' not found."}
 
-        # 3. ANALYZE PITCH
+        # 3. EXTRACT PITCH & ALIGN (DTW)
         ref_norm = REF_CACHE[word_id]["norm_pitch"]
         user_norm = process_audio_file(temp_filename)
         dist, path = fastdtw(ref_norm, user_norm, dist=lambda x, y: abs(x - y))
 
         # 4. CALCULATE SCORE
         raw_score = max(0, 100 - (dist / len(path) * 25))
+        final_score = int(raw_score)
 
-        # 5. FEEDBACK LOGIC
-        final_score = raw_score
         feedback_msg = "Great pronunciation!"
         if not is_text_correct:
-            final_score = max(0, raw_score - 50)
-            feedback_msg = "Pitch analysis complete. (Pronunciation did not match)"
+            final_score = max(0, final_score - 50)
+            feedback_msg = f"Heard '{heard_text}'. Accuracy affected by pronunciation."
 
-        # 6. GENERATE GRAPH
+        # 5. GENERATE VISUAL FEEDBACK
         ref_aligned = [ref_norm[i] for i, j in path]
         user_aligned = [user_norm[j] for i, j in path]
         regions = get_syllable_regions(path, word_id)
         graph = generate_graph(ref_aligned, user_aligned, regions, word_id)
 
-        # 7. CALCULATE TOTAL TIME
+        # 6. UPDATE GLOBAL STATS & PERSISTENCE
+        user_data["scores_history"].append(final_score)
+        if len(user_data["scores_history"]) > 50:
+            user_data["scores_history"].pop(0)
+
+        # Only award streak progress for successful attempts
+        if is_text_correct and final_score > 70:
+            today = datetime.now().date()
+            yesterday = today - timedelta(days=1)
+
+            last_date_str = user_data.get("last_practice_date")
+            last_date = datetime.strptime(last_date_str, "%Y-%m-%d").date() if last_date_str else None
+
+            if last_date == yesterday:
+                user_data["current_streak"] += 1
+            elif last_date != today:
+                # If they missed a day, reset. If they already practiced today, do nothing.
+                user_data["current_streak"] = 1
+
+            user_data["last_practice_date"] = today.strftime("%Y-%m-%d")
+            user_data["total_sessions"] += 1
+            user_data["best_streak"] = max(user_data["best_streak"], user_data["current_streak"])
+            save_progress()
+
         duration = round(time.time() - start_time, 2)
-        print(f"⏱️ SERVER RESPONSE TIME: {duration}s | Heard: '{heard_text}'")
+        print(f"⏱️ RESPONSE: {duration}s | Score: {final_score} | Streak: {user_data['current_streak']}")
 
         return {
-            "score": int(final_score),
+            "score": final_score,
             "feedback": feedback_msg,
             "graph_image": graph,
-            "processing_time": f"{duration}s"  # Sending this back to the app too
+            "processing_time": f"{duration}s",
+            "current_streak": user_data["current_streak"],
+            "user_average": round(sum(user_data["scores_history"]) / len(user_data["scores_history"]), 1)
         }
+
+    except Exception as e:
+        print(f"❌ ERROR: {e}")
+        return {"error": "Processing failed. Check audio quality."}
 
     finally:
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
-
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+uvicorn.run(app, host="0.0.0.0", port=8000)
