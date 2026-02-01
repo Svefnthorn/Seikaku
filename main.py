@@ -318,8 +318,8 @@ async def get_leaderboard():
     all_users = [
         {"name": "Sensei_Bot", "streak": 486, "avg_score": 99},
         {"name": "You (Hacker)", "streak": user_data["current_streak"], "avg_score": round(user_avg, 1)},
-        {"name": "Kenji", "streak": 12, "avg_score": 88},
-        {"name": "Yuki", "streak": 8, "avg_score": 90}
+        {"name": "Kenji", "streak": 12, "avg_score": 78},
+        {"name": "Yuki", "streak": 8, "avg_score": 89}
     ]
 
     # Sort by average score (highest first)
