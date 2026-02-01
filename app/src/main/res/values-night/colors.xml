@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="text_phonetic">#CCCCCC</color>
+    <color name="text_primary_adaptive">#FFFFFF</color>
+    <color name="surface_adaptive">#121212</color>
+    <color name="secondary_background_adaptive">#2C2C2C</color>
+
+    <!-- Chapter Box Gradient for Dark Mode (Blue to Black) -->
+    <color name="chapter_gradient_start">#6FBEF5</color>
+    <color name="chapter_gradient_end">#000000</color>
+</resources>

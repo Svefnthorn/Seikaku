@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Adaptive colors -->
+    <color name="text_phonetic">#666666</color>
+    <color name="text_primary_adaptive">#000000</color>
+    <color name="text_chapter_title">#FFFFFF</color>
+
+    <color name="surface_adaptive">#FFFFFF</color>
+    <color name="secondary_background_adaptive">#F0F0F0</color>
+
+    <!-- Chapter Box Colors -->
+    <color name="chapter_gradient_start">#6FBEF5</color>
+    <color name="chapter_gradient_end">#FFFFFF</color>
+</resources>

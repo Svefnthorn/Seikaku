@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. Reverted to DayNight to support dark mode. -->
+    <style name="Base.Theme.Seikaku" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Seikaku" parent="Base.Theme.Seikaku" />
+
+    <style name="ShapeAppearance.Seikaku.LeftProtruding" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeBottomLeft">0dp</item>
+        <item name="cornerSizeTopRight">24dp</item>
+        <item name="cornerSizeBottomRight">24dp</item>
+    </style>
+
+    <style name="ShapeAppearance.Seikaku.RightProtruding" parent="ShapeAppearance.Material3.MediumComponent">
+        <item name="cornerSizeTopLeft">24dp</item>
+        <item name="cornerSizeBottomLeft">24dp</item>
+        <item name="cornerSizeTopRight">0dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+    </style>
+</resources>

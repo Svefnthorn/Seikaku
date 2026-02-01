@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface_adaptive"
+    tools:context=".MainActivity">
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_arrow_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/text_primary_adaptive" />
+
+    <ImageButton
+        android:id="@+id/btnProfile"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="Profile"
+        android:src="@drawable/ic_person"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/text_primary_adaptive" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:fontFamily="@font/inter_medium"
+        android:text="@string/chapter_overview"
+        android:textAlignment="center"
+        android:textColor="@color/text_primary_adaptive"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- Row 1 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <include android:id="@+id/item_chapter1" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+                <include android:id="@+id/item_chapter2" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+            </LinearLayout>
+
+            <!-- Row 2 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <include android:id="@+id/item_chapter3" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+                <include android:id="@+id/item_chapter4" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+            </LinearLayout>
+
+            <!-- Row 3 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <include android:id="@+id/item_chapter5" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+                <include android:id="@+id/item_chapter6" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+            </LinearLayout>
+
+            <!-- Row 4 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <include android:id="@+id/item_chapter7" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+                <include android:id="@+id/item_chapter8" layout="@layout/item_chapter" android:layout_width="0dp" android:layout_height="300dp" android:layout_weight="1" android:layout_margin="8dp"/>
+            </LinearLayout>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
